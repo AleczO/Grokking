@@ -1,28 +1,42 @@
 import torch
 from torch.utils.data import Dataset
 
-class ModuloDataset(Dataset):
-    def __init__(self, p):
-        self.input, self.output = self.generateData(p)
-        self.size = p * p
-        self.p = p
+class complexNumbers(Dataset):
+    def __init__(self, N):
+        self.N = N
+        self.size = (2 * N + 1)**4
+
+        self.offset = N
+        self.output_offset = 2 * (N * N)
+
+        self.inputs, self.outputs = self.GenerateDataset(N)
 
     def __len__(self):
         return self.size
     
     def __getitem__(self, index):
-        return self.input[index], self.output[index]
+        return self.inputs[index], self.outputs[index]
+    
+    def GenerateDataset(self, N):
+        inputs = torch.zeros([(2 * N + 1)**4, 4], dtype=torch.long)
+        outputs = torch.zeros([(2 * N + 1)**4, 2], dtype=torch.long)
 
-    def generateData(self, p):
         i = 0
-        input = torch.zeros([p * p, 2], dtype=torch.long)
-        output = torch.zeros(p * p, dtype=torch.long)
+        for a in range(-N, N + 1):
+            for b in range(-N, N + 1):
+                for c in range(-N, N + 1):
+                    for d in range(-N, N + 1):
+                        inputs[i] = torch.tensor([
+                            a + self.offset,
+                            b + self.offset,
+                            c + self.offset,
+                            d + self.offset
+                        ])
 
-        for a in range(p):
-            for b in range(p):
-                input[i][0] = a
-                input[i][1] = b
-                output[i] = (a + b) % p
-                i += 1
-                
-        return input, output
+                        outputs[i] = torch.tensor([
+                            a * c - b * d + self.output_offset,
+                            a * d + b * c + self.output_offset
+                        ])
+                        i += 1
+
+        return inputs, outputs

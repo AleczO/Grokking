@@ -53,19 +53,23 @@ class DecoderLayer(nn.Module):
 
 
 class GrokkingSetup(nn.Module):
-    def __init__(self, p, d_model, d_k, d_v, n_layers):
+    def __init__(self, d_model, pos_encoding, voc_size, d_k, d_v, n_layers):
         super().__init__()
-        self.p = p
+        self.vocab = voc_size
         self.d_model = d_model
+        self.pos_encoding = pos_encoding
 
-        self.tokens_embed = nn.Embedding(p, d_model)
-        self.pos_embed = nn.Embedding(2, d_model)
+
+        self.tokens_embed = nn.Embedding(self.vocab, d_model)
+        self.pos_embed = nn.Embedding(self.pos_encoding, d_model)
 
         self.layers = nn.ModuleList([
             DecoderLayer(d_model, d_k, d_v) for _ in range(n_layers)
         ])
 
-        self.unembed = nn.Linear(d_model, p)
+        
+        self.unembed_re = nn.Linear(self.d_model, self.vocab)
+        self.unembed_im = nn.Linear(self.d_model, self.vocab)
 
         self.init_weights()
 
@@ -87,5 +91,7 @@ class GrokkingSetup(nn.Module):
             
         out = X[:, -1, :]
 
-        logits = self.unembed(out)
-        return logits
+        logits_re = self.unembed_re(out)
+        logits_im = self.unembed_im(out)
+
+        return logits_re, logits_im

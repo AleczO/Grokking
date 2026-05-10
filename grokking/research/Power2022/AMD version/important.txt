@@ -1,2 +1,0 @@
-scp -P 60022 plik.py student2@156.17.134.53:/home/student2/projects/grokking/
-
