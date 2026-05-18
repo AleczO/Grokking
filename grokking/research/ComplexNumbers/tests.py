@@ -73,11 +73,11 @@ def embedding_analysis_tsne(model, N=5, offset=50):
 
 
 
-path = r"/home/aleczo/Documents/Temp/Research/grokking/research/ComplexNumbers/experiments/run_L2_D128_20260510_084329"
+path = r"/home/aleczo/Documents/Temp/Research/grokking/research/ComplexNumbers/experiments/run_L2_D64_20260510_201635"
 
 model = GetModelFromConfig(path)
 
-model_path = r"/home/aleczo/Documents/Temp/Research/grokking/research/ComplexNumbers/experiments/run_L2_D128_20260510_084329/checkpoints/model_epoch_19000.pt"
+model_path = r"/home/aleczo/Documents/Temp/Research/grokking/research/ComplexNumbers/experiments/run_L2_D64_20260510_201635/checkpoints/model_epoch_18999.pt"
 
 model.load_state_dict(torch.load(model_path))
 

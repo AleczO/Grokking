@@ -6,7 +6,7 @@ def get_epoch(name):
     nums = re.findall(r'\d+', name)
     return int(nums[0]) if nums else 0
 
-ckpt_dir = "experiments/run_L2_D128_20260510_084329/checkpoints"
+ckpt_dir = "experiments/run_L2_D32_20260510_224142/checkpoints"
 checkpoints = [f for f in os.listdir(ckpt_dir) if f.endswith('.pt')]
 checkpoints.sort(key=get_epoch)
 

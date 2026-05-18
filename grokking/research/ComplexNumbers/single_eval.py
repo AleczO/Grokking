@@ -33,12 +33,12 @@ def run_single(ckpt_path):
     model.load_state_dict(torch.load(ckpt_path, map_location=device, weights_only=True))
     model.to(device).eval()
 
-    N = 5 
+    N = 6
     dataset = complexNumbers(N)
     
 
     dataset_size = len(dataset)
-    train_size = int(0.4 * dataset_size) 
+    train_size = int(0.3 * dataset_size) 
     val_size = dataset_size - train_size
     
     generator = torch.Generator().manual_seed(42)
