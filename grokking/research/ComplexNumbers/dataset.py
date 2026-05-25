@@ -6,7 +6,7 @@ class complexNumbers(Dataset):
         self.N = N
         self.size = (2 * N + 1)**4
 
-        self.offset = N
+        self.offset = 2 * N * N
         self.output_offset = 2 * (N * N)
 
         self.inputs, self.outputs = self.GenerateDataset(N)
