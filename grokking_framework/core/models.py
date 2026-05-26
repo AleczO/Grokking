@@ -34,8 +34,8 @@ class AttentionNAT(nn.Module): # Attention Neuron-Astrocyte Transformer
 
         batch_size, seq_len, _ = X.shape
 
-        H = torch.zeros(batch_size, self.d, self.m, device=X.device)
-        g = torch.zeros(batch_size, self.m, device=X.device)
+        H = torch.zeros(batch_size, self.d, self.m, dtype=X.dtype, device=X.device)
+        g = torch.zeros(batch_size, self.m, dtype=X.dtype, device=X.device)
 
         outputs = []
 
@@ -57,8 +57,8 @@ class AttentionNAT(nn.Module): # Attention Neuron-Astrocyte Transformer
             outputs.append(out_t.unsqueeze(1))
             
             outer = torch.bmm(x_t.unsqueeze(-1), h_k.unsqueeze(1)) / self.m
-            H = H * self.gamma + outer
-            g = g + h_k
+            H = H.clone() * self.gamma + outer
+            g = g.clone() + h_k
             
         return torch.cat(outputs, dim=1)
     
@@ -125,7 +125,6 @@ class BaseNAT(nn.Module): # Neuron-Astrocyte Transformer
     
     
     def get_hidden_states(self, x):
-
         x = self.tokens_embed(x) 
 
         for layer in self.layers:
@@ -305,11 +304,20 @@ class DOT(BaseDOT):
         acc = (logits.argmax(dim=1) == targets).float().mean().item()
         return loss, acc
 
-
 class NAT(BaseNAT):
-    def f():
-        return
-
+    def computeLoss(self, logits, targets):
+        logits_re, logits_im = logits
+        
+        loss_re = F.cross_entropy(logits_re, targets[:, 0])
+        loss_im = F.cross_entropy(logits_im, targets[:, 1])
+        loss = loss_re + loss_im
+        
+        preds_re = logits_re.argmax(dim=1)
+        preds_im = logits_im.argmax(dim=1)
+        
+        acc = ((preds_re == targets[:, 0]) & (preds_im == targets[:, 1])).float().mean().item()
+        
+        return loss, acc
 
 class MHDOT(BaseMHDOT):
     def computeLoss(self, logits_list, targets):
@@ -331,11 +339,11 @@ class MHDOT(BaseMHDOT):
 # ---------------------------------------------------------------------- Model Selection ------------------------------------------------------
 
 
-def BuildModel(config):
+def GetModel(config):
     setup = config["setup"]
     arch = config["experiment"]["arch"]
 
-    if arch == "NAT":
+    if arch == "NAT": # d_model, pos_encoding, voc_size, m_hidden, n_layers
         return NAT(
             d_model=setup["d_model"],
             pos_encoding=setup["pos_encoding"],
@@ -345,7 +353,7 @@ def BuildModel(config):
         )
     if arch == "DOT":
         return DOT(
-            p=setup["voc_size"],
+            voc_size=setup["voc_size"],
             d_model=setup["d_model"],
             d_k=setup["d_k"], 
             d_v=setup["d_v"],
