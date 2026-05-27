@@ -106,3 +106,83 @@ class DatasetCNUC(Dataset): # Complex Numbers on Unit Circle Dataset (Work in pr
             ])
 
         return inputs, outputs
+
+
+class DatasetCNFM(Dataset): # Complex Numbers Full Matrix Output
+    def __init__(self, N):
+        self.N = N
+        self.size = (2 * N + 1)**4
+        self.offset = 2 * (N * N)
+
+        self.inputs, self.outputs = self.GenerateDataset(N)
+
+    def __len__(self):
+        return self.size
+    
+    def __getitem__(self, index):
+        return self.inputs[index], self.outputs[index]
+    
+    def GenerateDataset(self, N):
+        inputs = torch.zeros([(2 * N + 1)**4, 8], dtype=torch.long)
+        outputs = torch.zeros([(2 * N + 1)**4, 4 ], dtype=torch.long)
+
+        i = 0
+        for a in range(-N, N + 1):
+            for b in range(-N, N + 1):
+                for c in range(-N, N + 1):
+                    for d in range(-N, N + 1):
+                        
+                        inputs[i] = torch.tensor([
+                            a + self.offset, -b + self.offset, b + self.offset, a + self.offset,
+                            c + self.offset, -d + self.offset, d + self.offset, c + self.offset
+                        ])
+
+                        re_val = a * c - b * d + self.offset
+                        im_val = a * d + b * c + self.offset
+
+                        neg_im_val = -(a * d + b * c) + self.offset
+                        outputs[i] = torch.tensor([re_val, neg_im_val, im_val, re_val])
+                        i += 1
+
+        return inputs, outputs
+    
+
+class DatasetCNM(Dataset): # Complex Numbers Real-Imaginary Matrix Output
+    def __init__(self, N):
+        self.N = N
+        self.size = (2 * N + 1)**4
+        self.offset = 2 * (N * N)
+        self.output_offset = 2 * (N * N)
+
+        self.inputs, self.outputs = self.GenerateDataset(N)
+
+    def __len__(self):
+        return self.size
+    
+    def __getitem__(self, index):
+        return self.inputs[index], self.outputs[index]
+    
+    def GenerateDataset(self, N):
+        inputs = torch.zeros([(2 * N + 1)**4, 8], dtype=torch.long)
+        outputs = torch.zeros([(2 * N + 1)**4, 2], dtype=torch.long)
+
+        i = 0
+        for a in range(-N, N + 1):
+            for b in range(-N, N + 1):
+                for c in range(-N, N + 1):
+                    for d in range(-N, N + 1):
+                        
+                        inputs[i] = torch.tensor([
+                            a + self.offset, -b + self.offset, b + self.offset, a + self.offset,
+                            c + self.offset, -d + self.offset, d + self.offset, c + self.offset
+                        ])
+
+                        re_val = a * c - b * d + self.output_offset
+                        im_val = a * d + b * c + self.output_offset
+
+                        outputs[i] = torch.tensor([re_val, im_val])
+                        i += 1
+
+        return inputs, outputs
+    
+

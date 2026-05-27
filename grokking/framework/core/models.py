@@ -174,7 +174,7 @@ class LayerDOT(nn.Module): # Layer of Decoder-Only Single-Head Transformer
         return X_n
 
 class BaseDOT(nn.Module): # Decoder-Only Single-Head Transformer
-    def __init__(self, voc_size, pos_encoding, d_model, d_k, d_v, n_layers):
+    def __init__(self, voc_size, pos_encoding, d_model, d_k, d_v, n_layers, num_outputs):
         super().__init__()
         self.p = voc_size
         self.d_model = d_model
@@ -186,7 +186,9 @@ class BaseDOT(nn.Module): # Decoder-Only Single-Head Transformer
             LayerDOT(d_model, d_k, d_v) for _ in range(n_layers)
         ])
 
-        self.unembed = nn.Linear(d_model, voc_size)
+        self.output_heads = nn.ModuleList([
+            nn.Linear(d_model, voc_size) for _ in range(num_outputs)
+        ])
 
         self.init_weights()
 
@@ -357,7 +359,8 @@ def GetModel(config):
             d_model=setup["d_model"],
             d_k=setup["d_k"], 
             d_v=setup["d_v"],
-            n_layers=setup["n_layers"]
+            n_layers=setup["n_layers"],
+            num_outputs=setup["num_outputs"]
         )
     if arch == "MHDOT":
         return MHDOT(

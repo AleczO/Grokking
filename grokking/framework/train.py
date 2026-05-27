@@ -8,47 +8,28 @@ import argparse
 
 from core.models import GetModel
 from core.utils import SaveConfig, SaveModel, LoadModel, PlotModel, DivideDataset
-from core.datasets import DatasetCN
+from core.datasets import DatasetCN, DatasetCNFM
 from core.engine import TrainEpoch, Validate
+from configs import DOT_CNFM
 
 
 def train():
-    config = {
-        "experiment": {
-            "arch": "NAT",
-            "dataset": "complex_numbers",
-            "save_path": "/home/aleczo/Documents/Repositories/Research/grokking_framework/runs/ex_002",
-            "N": 3
-        },
-        "setup": {
-            "d_model": 64,
-            "n_layers": 1,
-            "m_hidden": 128,
-            "pos_encoding": 4,
-            "voc_size": 65
-        },
-        "training": {
-            "lr": 1e-3,
-            "weight_decay": 0.10,
-            "epochs": 20000,
-            "train_frac": 0.15,
-            "batch_size": 256
-        }
-    }
+    N = 4
+    config = DOT_CNFM(N)
 
     device = torch.device("cpu")
 
     save_path = config["experiment"]["save_path"]
     os.makedirs(save_path, exist_ok=True)
     
-    dataset = DatasetCN(config["experiment"]["N"])
+    dataset = DatasetCNFM(N)
 
     train_ds, val_ds = DivideDataset(dataset, config["training"]["train_frac"])
     train_loader = DataLoader(train_ds, batch_size=config["training"]["batch_size"], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=config["training"]["batch_size"], shuffle=False)
 
     model = GetModel(config)
-    model.to(device)
+    model.to(device)         
 
     optimizer = optim.AdamW(
         model.parameters(), 
