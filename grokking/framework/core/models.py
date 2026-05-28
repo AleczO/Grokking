@@ -301,10 +301,50 @@ class BaseMHDOT(nn.Module): # Decoder-Only Multi-Head Transformer
 
 
 class DOT(BaseDOT):
-    def computeLoss(self, logits, targets):
-        loss = F.cross_entropy(logits, targets)
-        acc = (logits.argmax(dim=1) == targets).float().mean().item()
-        return loss, acc
+    def computeLoss(self, logits_list, targets):
+        total_loss = 0.0
+        total_acc = 0.0
+        
+        if targets.dim() == 1:
+            targets = targets.unsqueeze(1)
+            
+        for i, logits in enumerate(logits_list):
+            loss = F.cross_entropy(logits, targets[:, i])
+            acc = (logits.argmax(dim=1) == targets[:, i]).float().mean().item()
+            
+            total_loss += loss
+            total_acc += acc
+
+        return total_loss, total_acc / len(logits_list)
+    
+    def computeLoss(self, logits_list, targets):
+        total_loss = 0.0
+        
+        if targets.dim() == 1:
+            targets = targets.unsqueeze(1)
+            
+        num_outputs = targets.size(1)
+        
+        masks = []
+        
+        for i in range(num_outputs):
+            logits = logits_list[i]
+            
+            loss = F.cross_entropy(logits, targets[:, i])
+            total_loss += loss
+            
+            is_head_correct = logits.argmax(dim=1) == targets[:, i]
+            masks.append(is_head_correct)
+            
+        scaled_loss = total_loss / num_outputs
+
+        correct = masks[0]
+        for mask in masks[1:]:
+            correct = correct & mask
+            
+        sequence_acc = correct.float().mean().item()
+
+        return scaled_loss, sequence_acc
 
 class NAT(BaseNAT):
     def computeLoss(self, logits, targets):
@@ -357,6 +397,7 @@ def GetModel(config):
         return DOT(
             voc_size=setup["voc_size"],
             d_model=setup["d_model"],
+            pos_encoding=setup["pos_encoding"],
             d_k=setup["d_k"], 
             d_v=setup["d_v"],
             n_layers=setup["n_layers"],

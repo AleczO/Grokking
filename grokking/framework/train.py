@@ -17,10 +17,12 @@ def train():
     N = 4
     config = DOT_CNFM(N)
 
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     save_path = config["experiment"]["save_path"]
     os.makedirs(save_path, exist_ok=True)
+
+    SaveConfig(config, save_path)
     
     dataset = DatasetCNFM(N)
 

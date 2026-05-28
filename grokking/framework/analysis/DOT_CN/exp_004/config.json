@@ -1,0 +1,24 @@
+{
+    "experiment": {
+        "arch": "DOT",
+        "dataset": "CN",
+        "save_path": "./runs/DOT_CN/exp_004",
+        "N": 5
+    },
+    "setup": {
+        "d_model": 64,
+        "n_layers": 2,
+        "d_k": 128,
+        "d_v": 128,
+        "voc_size": 101,
+        "pos_encoding": 4,
+        "num_outputs": 2
+    },
+    "training": {
+        "lr": 0.001,
+        "weight_decay": 0.15,
+        "epochs": 15000,
+        "train_frac": 0.3,
+        "batch_size": 256
+    }
+}
