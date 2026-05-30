@@ -136,7 +136,7 @@ class BaseNAT(nn.Module): # Neuron-Astrocyte Transformer
 # ---------------------------------------------------------------------- Decoder-Only Single-Head Transformer Implementation ------------------------------------------------------
 
 class LayerDOT(nn.Module): # Layer of Decoder-Only Single-Head Transformer
-    def __init__(self, D, D_k, D_v, scale_factor=4) -> None:
+    def __init__(self, D, D_k, D_v, scale_factor=6) -> None:
         super().__init__()
         self.W_q = nn.Parameter(torch.normal(0, 0.02, size=(D, D_k)))
         self.W_k = nn.Parameter(torch.normal(0, 0.02, size=(D, D_k)))
@@ -174,7 +174,7 @@ class LayerDOT(nn.Module): # Layer of Decoder-Only Single-Head Transformer
         return X_n
 
 class BaseDOT(nn.Module): # Decoder-Only Single-Head Transformer
-    def __init__(self, voc_size, pos_encoding, d_model, d_k, d_v, n_layers, num_outputs):
+    def __init__(self, voc_size, pos_encoding, d_model, d_k, d_v, n_layers, num_outputs, scale_factor=4):
         super().__init__()
         self.p = voc_size
         self.d_model = d_model
@@ -183,7 +183,7 @@ class BaseDOT(nn.Module): # Decoder-Only Single-Head Transformer
         self.pos_embed = nn.Embedding(pos_encoding, d_model)
 
         self.layers = nn.ModuleList([
-            LayerDOT(d_model, d_k, d_v) for _ in range(n_layers)
+            LayerDOT(d_model, d_k, d_v, scale_factor=scale_factor) for _ in range(n_layers)
         ])
 
         self.output_heads = nn.ModuleList([
@@ -209,7 +209,7 @@ class BaseDOT(nn.Module): # Decoder-Only Single-Head Transformer
 
         out = X[:, -1, :]
 
-        logits = self.unembed(out)
+        logits = [head(out) for head in self.output_heads]
         return logits
 
 # ---------------------------------------------------------------------- Decoder-Only Multi-Head Transformer Implementation ------------------------------------------------------
