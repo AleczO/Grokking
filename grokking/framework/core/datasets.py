@@ -70,42 +70,110 @@ class DatasetCN(Dataset): # Complex Numbers Dataset
                         i += 1
 
         return inputs, outputs
+    
 
-
-class DatasetCNUC(Dataset): # Complex Numbers on Unit Circle Dataset (Work in progress)
-    def __init__(self, N):
+class DatasetCNA(Dataset): # Complex Numbers Dataset Asymetry
+    def __init__(self, N, split="train"):
         self.N = N
-
+        self.split = split
+        
         self.offset = 2 * (N * N)
         self.output_offset = 2 * (N * N)
 
+        self.inputs, self.outputs = self.GenerateDataset(N)
+        self.size = self.inputs.shape[0]
 
     def __len__(self):
-        return self.N
-
+        return self.size
+    
     def __getitem__(self, index):
-        return self.inputs[index], self.output[index]
-
+        return self.inputs[index], self.outputs[index]
+    
     def GenerateDataset(self, N):
-        inputs = torch.zeros([N, 4], dtype=torch.float32)
-        outputs = torch.zeros([N, 2], dtype=torch.float32)
+        train_inputs, train_outputs = [], []
+        test_inputs, test_outputs = [], []
 
-        i = 0
-        for i in range(N):
-            theta1 = 2 * torch.pi * torch.rand(1)
-            a, b = torch.cos(theta1), torch.sin(theta1)
+        for a in range(-N, N + 1):
+            for b in range(-N, N + 1):
+                for c in range(-N, N + 1):
+                    for d in range(-N, N + 1):
+                        
+                        inp = [
+                            a + self.offset,
+                            b + self.offset,
+                            c + self.offset,
+                            d + self.offset
+                        ]
 
-            theta2 = 2 * torch.pi * torch.rand(1)
-            c, d = torch.cos(theta2), torch.sin(theta2)
+                        out = [
+                            a * c - b * d + self.output_offset,
+                            a * d + b * c + self.output_offset
+                        ]
 
-            inputs[i] = torch.tensor([a, b, c, d])
-            
-            outputs[i] = torch.tensor([
-                a * c - b * d,
-                a * d + b * c
-            ])
+                        if (a, b) <= (c, d):
+                            train_inputs.append(inp)
+                            train_outputs.append(out)
+                        else:
+                            test_inputs.append(inp)
+                            test_outputs.append(out)
 
-        return inputs, outputs
+        if self.split == "train":
+            return torch.tensor(train_inputs, dtype=torch.long), torch.tensor(train_outputs, dtype=torch.long)
+        else:
+            return torch.tensor(test_inputs, dtype=torch.long), torch.tensor(test_outputs, dtype=torch.long)
+
+
+class DatasetCNC(Dataset):
+    def __init__(self, N, split="train"):
+        self.N = N
+        self.split = split
+        
+        self.offset = 2 * (N * N)
+        self.output_offset = 2 * (N * N)
+
+        self.inputs, self.outputs = self.GenerateDataset(N)
+        self.size = self.inputs.shape[0]
+
+    def __len__(self):
+        return self.size
+    
+    def __getitem__(self, index):
+        return self.inputs[index], self.outputs[index]
+    
+    def GenerateDataset(self, N):
+        train_inputs, train_outputs = [], []
+        test_inputs, test_outputs = [], []
+
+        for a in range(-N, N + 1):
+            for b in range(-N, N + 1):
+                for c in range(-N, N + 1):
+                    for d in range(-N, N + 1):
+                        
+                        inp = [
+                            a + self.offset,
+                            b + self.offset,
+                            c + self.offset,
+                            d + self.offset
+                        ]
+
+                        out = [
+                            a * c - b * d + self.output_offset,
+                            a * d + b * c + self.output_offset
+                        ]
+
+                        if b > 0 and d > 0:
+                            train_inputs.append(inp)
+                            train_outputs.append(out)
+                        else:
+                            test_inputs.append(inp)
+                            test_outputs.append(out)
+
+        if self.split == "train":
+            return torch.tensor(train_inputs, dtype=torch.long), torch.tensor(train_outputs, dtype=torch.long)
+        else:
+            return torch.tensor(test_inputs, dtype=torch.long), torch.tensor(test_outputs, dtype=torch.long)
+
+# ---------------------------------------------------------- Complex Numbers Matrix Form Datasets ----------------------------------------------------------
 
 
 class DatasetCNFM(Dataset): # Complex Numbers Full Matrix Output
@@ -145,16 +213,15 @@ class DatasetCNFM(Dataset): # Complex Numbers Full Matrix Output
                         i += 1
 
         return inputs, outputs
-    
 
-class DatasetCNM(Dataset): # Complex Numbers Real-Imaginary Matrix Output
-    def __init__(self, N):
+class DatasetCNFMA(Dataset): # Complex Numbers Full Matrix Output Assymetry
+    def __init__(self, N, split="train"):
         self.N = N
-        self.size = (2 * N + 1)**4
         self.offset = 2 * (N * N)
-        self.output_offset = 2 * (N * N)
-
+        self.split = split
+        
         self.inputs, self.outputs = self.GenerateDataset(N)
+        self.size = self.inputs.shape[0]
 
     def __len__(self):
         return self.size
@@ -163,26 +230,43 @@ class DatasetCNM(Dataset): # Complex Numbers Real-Imaginary Matrix Output
         return self.inputs[index], self.outputs[index]
     
     def GenerateDataset(self, N):
-        inputs = torch.zeros([(2 * N + 1)**4, 8], dtype=torch.long)
-        outputs = torch.zeros([(2 * N + 1)**4, 2], dtype=torch.long)
+        all_complex_numbers = []
+        for x in range(-N, N + 1):
+            for y in range(-N, N + 1):
+                all_complex_numbers.append((x, y))
 
-        i = 0
-        for a in range(-N, N + 1):
-            for b in range(-N, N + 1):
-                for c in range(-N, N + 1):
-                    for d in range(-N, N + 1):
-                        
-                        inputs[i] = torch.tensor([
-                            a + self.offset, -b + self.offset, b + self.offset, a + self.offset,
-                            c + self.offset, -d + self.offset, d + self.offset, c + self.offset
-                        ])
+        target_inputs = []
+        target_outputs = []
 
-                        re_val = a * c - b * d + self.output_offset
-                        im_val = a * d + b * c + self.output_offset
+        for i in range(len(all_complex_numbers)):
+            for j in range(i, len(all_complex_numbers)):
+                
+                a, b = all_complex_numbers[i]
+                c, d = all_complex_numbers[j]
+                
+                re_val = a * c - b * d + self.offset
+                im_val = a * d + b * c + self.offset
+                neg_im_val = -(a * d + b * c) + self.offset
+                out = [re_val, neg_im_val, im_val, re_val]
 
-                        outputs[i] = torch.tensor([re_val, im_val])
-                        i += 1
+                inp_forward = [
+                    a + self.offset, -b + self.offset, b + self.offset, a + self.offset,
+                    c + self.offset, -d + self.offset, d + self.offset, c + self.offset
+                ]
+                
+                inp_reversed = [
+                    c + self.offset, -d + self.offset, d + self.offset, c + self.offset,
+                    a + self.offset, -b + self.offset, b + self.offset, a + self.offset
+                ]
 
-        return inputs, outputs
-    
+                if self.split == "train":
+                    target_inputs.append(inp_forward)
+                    target_outputs.append(out)
+                
+                elif self.split == "val":
+                    if i != j:
+                        target_inputs.append(inp_reversed)
+                        target_outputs.append(out)
 
+
+        return torch.tensor(target_inputs, dtype=torch.long), torch.tensor(target_outputs, dtype=torch.long)
