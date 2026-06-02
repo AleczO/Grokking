@@ -17,7 +17,7 @@
     "training": {
         "lr": 0.001,
         "weight_decay": 0.15,
-        "epochs": 6000,
+        "epochs": 20000,
         "train_frac": 0.4,
         "batch_size": 256
     }
