@@ -1,4 +1,4 @@
-# Research
+# Grokking
 
 Research code on **grokking** [[1]](#references) — the delayed-generalization
 phenomenon where a transformer memorizes a training set long before it
