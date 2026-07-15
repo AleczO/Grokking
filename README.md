@@ -11,17 +11,15 @@ linear-attention variant inspired by neuron-astrocyte signaling.
 
 ```
 Research/
-└── grokking/
-    └── framework/
-        ├── train.py          # CLI entry point for running experiments
-        ├── configs.py        # registry of experiment configs (EXPERIMENTS)
-        ├── core/
-        │   ├── models.py     # architectures: DOT, MHDOT, NAT (+ GetModel factory)
-        │   ├── datasets.py   # synthetic datasets + DATASET_REGISTRY / BuildDatasets
-        │   ├── engine.py     # train/validate epoch loops
-        │   └── utils.py      # config/checkpoint I/O, plotting, run-dir numbering
-        ├── analysis/          # curated results per experiment (config + notebook + plot)
-        └── runs/              # gitignored scratch output written by train.py
+├── train.py          # CLI entry point for running experiments
+├── configs.py        # registry of experiment configs (EXPERIMENTS)
+├── core/
+│   ├── models.py     # architectures: DOT, MHDOT, NAT (+ GetModel factory)
+│   ├── datasets.py   # synthetic datasets + DATASET_REGISTRY / BuildDatasets
+│   ├── engine.py     # train/validate epoch loops
+│   └── utils.py      # config/checkpoint I/O, plotting, run-dir numbering
+├── analysis/          # curated results per experiment (config + notebook + plot)
+└── runs/              # gitignored scratch output written by train.py
 ```
 
 ## Installation
@@ -39,13 +37,13 @@ pip install torch numpy pandas matplotlib seaborn
 List what's registered:
 
 ```
-python grokking/framework/train.py --list
+python train.py --list
 ```
 
 Run one:
 
 ```
-python grokking/framework/train.py --experiment DOT_CN --N 5
+python train.py --experiment DOT_CN --N 5
 ```
 
 - `--experiment` — required, one of the names from `--list` (keys of `EXPERIMENTS` in `configs.py`)
