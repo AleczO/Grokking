@@ -270,3 +270,30 @@ class DatasetCNFMA(Dataset): # Complex Numbers Full Matrix Output Assymetry
 
 
         return torch.tensor(target_inputs, dtype=torch.long), torch.tensor(target_outputs, dtype=torch.long)
+
+
+# ---------------------------------------------------------- Registry ----------------------------------------------------------
+
+DATASET_REGISTRY = {
+    "M": DatasetM,
+    "CN": DatasetCN,
+    "CNA": DatasetCNA,
+    "CNC": DatasetCNC,
+    "CNFM": DatasetCNFM,
+    "CNFMA": DatasetCNFMA,
+}
+
+# Some datasets generate one array and need a random split (DivideDataset);
+# others build train/eval as separate deterministic splits via a constructor
+# arg. DatasetCNFMA specifically requires split="val" (any other value than
+# "train"/"val" silently yields an empty split).
+_SPLIT_AWARE = {"CNA": "test", "CNC": "test", "CNFMA": "val"}
+
+def BuildDatasets(name, N, train_frac):
+    cls = DATASET_REGISTRY[name]
+
+    if name in _SPLIT_AWARE:
+        return cls(N, split="train"), cls(N, split=_SPLIT_AWARE[name])
+
+    from .utils import DivideDataset
+    return DivideDataset(cls(N), train_frac)

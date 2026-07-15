@@ -1,4 +1,5 @@
 import os
+import re
 import torch
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -39,7 +40,7 @@ def PlotModel(epochs, train_acc, val_acc, path): # Plot epochs
     plt.figure(figsize=(10, 6))
     sns.lineplot(data=df_melted, x="Epoch", y="Accuracy", hue="Dataset", linewidth=2.5)
     
-    plt.title("Grokking Progress: Modular Addition", fontsize=16)
+    plt.title("Training Process", fontsize=16)
     plt.ylabel("Accuracy (%)", fontsize=12)
     plt.xlabel("Epochs", fontsize=12)
     plt.ylim(0, 105)
@@ -51,3 +52,10 @@ def DivideDataset(dataset, train_frac): # Divide dataset for training
     train_size = int(train_frac * len(dataset))
     val_size = len(dataset) - train_size
     return torch.utils.data.random_split(dataset, [train_size, val_size])
+
+def NextRunDir(base_dir): # Auto-increment exp_XXX run directory
+    os.makedirs(base_dir, exist_ok=True)
+    existing = [int(m.group(1)) for d in os.listdir(base_dir)
+                if (m := re.fullmatch(r"exp_(\d+)", d))]
+    next_id = max(existing, default=0) + 1
+    return os.path.join(base_dir, f"exp_{next_id:03d}")

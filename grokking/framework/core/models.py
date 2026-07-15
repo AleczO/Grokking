@@ -303,22 +303,6 @@ class BaseMHDOT(nn.Module): # Decoder-Only Multi-Head Transformer
 class DOT(BaseDOT):
     def computeLoss(self, logits_list, targets):
         total_loss = 0.0
-        total_acc = 0.0
-        
-        if targets.dim() == 1:
-            targets = targets.unsqueeze(1)
-            
-        for i, logits in enumerate(logits_list):
-            loss = F.cross_entropy(logits, targets[:, i])
-            acc = (logits.argmax(dim=1) == targets[:, i]).float().mean().item()
-            
-            total_loss += loss
-            total_acc += acc
-
-        return total_loss, total_acc / len(logits_list)
-    
-    def computeLoss(self, logits_list, targets):
-        total_loss = 0.0
         
         if targets.dim() == 1:
             targets = targets.unsqueeze(1)
@@ -412,6 +396,6 @@ def GetModel(config):
             n_layers=setup["n_layers"],
             num_outputs=setup["num_outputs"],
         )
-        
-    return -1
+
+    raise ValueError(f"Unknown architecture: {arch}")
 
