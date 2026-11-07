@@ -1,37 +1,27 @@
 import torch
 
-def TrainEpoch(model, loader, optimizer, device, clip_val=1.0):
+
+def TrainEpoch(model, inputs, targets, optimizer, clip_val=1.0):
+    """One full-batch training step on the whole training set. Returns (loss, acc)."""
     model.train()
-    total_acc = 0.0
-    
-    for inputs, outputs in loader:
-        inputs, outputs = inputs.to(device), outputs.to(device)
 
-        logits = model(inputs)
+    logits = model(inputs)
+    loss, acc = model.computeLoss(logits, targets)
 
-        loss, acc = model.computeLoss(logits, outputs)
+    optimizer.zero_grad()
+    loss.backward()
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_val)
+    optimizer.step()
 
-        optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_val)
-        optimizer.step()
-        
-        total_acc += acc
-        
-    return total_acc / len(loader)
+    return loss.item(), acc
 
 
 @torch.no_grad()
-def Validate(model, loader, device):
+def Validate(model, inputs, targets):
+    """Loss and accuracy on the whole validation set in a single forward pass."""
     model.eval()
-    total_acc = 0.0
-    
-    for inputs, outputs in loader:
-        inputs, outputs = inputs.to(device), outputs.to(device)
-        
-        logits = model(inputs)
-        _, acc = model.computeLoss(logits, outputs)
-        
-        total_acc += acc
-        
-    return total_acc / len(loader)
+
+    logits = model(inputs)
+    loss, acc = model.computeLoss(logits, targets)
+
+    return loss.item(), acc
