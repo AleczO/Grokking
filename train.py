@@ -25,11 +25,13 @@ def parse_args() -> argparse.Namespace:
     # Bookkeeping only: not stored in config.json, does not affect results
     p.add_argument("--save-every", type=int, default=500,
                    help="Save a checkpoint and the plot every N epochs")
+    p.add_argument("--print-every", type=int, default=100,
+                   help="Print metrics to the console every N epochs")
 
     return p.parse_args()
 
 
-def train(config, save_every=500):
+def train(config, save_every=500, print_every=100):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     exp = config["experiment"]
     training = config["training"]
@@ -49,7 +51,8 @@ def train(config, save_every=500):
         weight_decay=training["weight_decay"]
     )
 
-    print(f"Starting training: {exp['arch']}_{exp['dataset']} (N={exp['N']}) -> {save_path}")
+    print(f"Starting training: {exp['arch']}_{exp['dataset']} (N={exp['N']}) on {device} -> {save_path}")
+    print(f"train: {len(train_ds)} examples | val: {len(val_ds)} examples")
 
     logger = MetricsLogger(save_path)
 
@@ -61,7 +64,10 @@ def train(config, save_every=500):
                    train_loss=train_loss, train_acc=train_acc * 100,
                    val_loss=val_loss, val_acc=val_acc * 100)
 
-        print(f"epoch {epoch} | train acc {train_acc * 100:.2f}% | val acc {val_acc * 100:.2f}%")
+        if epoch % print_every == 0 or epoch == training["epochs"]:
+            print(f"epoch {epoch:>6} | "
+                  f"train loss {train_loss:.4f} acc {train_acc * 100:6.2f}% | "
+                  f"val loss {val_loss:.4f} acc {val_acc * 100:6.2f}%")
 
         if epoch % save_every == 0 or epoch == training["epochs"]:
             h = logger.history
@@ -75,7 +81,7 @@ def main():
     args = parse_args()
     config = build_config(args, EXPERIMENTS)
     if config is not None:
-        train(config, save_every=args.save_every)
+        train(config, save_every=args.save_every, print_every=args.print_every)
 
 
 if __name__ == "__main__":

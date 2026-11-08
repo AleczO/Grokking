@@ -231,9 +231,10 @@ class AttentionMHDOT(nn.Module): # Attention of Decoder-Only Multi-Head Transfor
     def forward(self, X):
         batch_size, seq_len, _ = X.shape
 
-        Q = self.W_q(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(-2, -1)
-        K = self.W_k(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(-2, -1)
-        V = self.W_v(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(-2, -1)
+        # (batch, seq, d_model) -> (batch, n_heads, seq, d_head)
+        Q = self.W_q(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
+        K = self.W_k(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
+        V = self.W_v(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
 
         scores = Q @ K.transpose(-2, -1) / np.sqrt(self.d_head)
         weights = torch.softmax(scores, dim=-1)
@@ -285,6 +286,11 @@ class BaseMHDOT(nn.Module): # Decoder-Only Multi-Head Transformer
 
         self.init_weights()
 
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, (nn.Embedding, nn.Linear)):
+                nn.init.normal_(m.weight, std=0.02)
+
     def forward(self, x):
         pos = torch.arange(x.shape[1], device=x.device).unsqueeze(0)
         X = self.tokens_embed(x) + self.pos_embed(pos)
@@ -300,35 +306,27 @@ class BaseMHDOT(nn.Module): # Decoder-Only Multi-Head Transformer
 # --------------------------------------------------------------- Loss Functions --------------------------------------------------------------
 
 
+def MultiHeadLoss(logits_list, targets):
+    """Mean cross-entropy over output heads; an example counts as correct
+    only if every head predicts its token correctly."""
+    if targets.dim() == 1:
+        targets = targets.unsqueeze(1)
+
+    num_outputs = targets.size(1)
+    total_loss = 0.0
+    correct = torch.ones(targets.size(0), dtype=torch.bool, device=targets.device)
+
+    for i in range(num_outputs):
+        logits = logits_list[i]
+        total_loss += F.cross_entropy(logits, targets[:, i])
+        correct &= logits.argmax(dim=1) == targets[:, i]
+
+    return total_loss / num_outputs, correct.float().mean().item()
+
+
 class DOT(BaseDOT):
     def computeLoss(self, logits_list, targets):
-        total_loss = 0.0
-        
-        if targets.dim() == 1:
-            targets = targets.unsqueeze(1)
-            
-        num_outputs = targets.size(1)
-        
-        masks = []
-        
-        for i in range(num_outputs):
-            logits = logits_list[i]
-            
-            loss = F.cross_entropy(logits, targets[:, i])
-            total_loss += loss
-            
-            is_head_correct = logits.argmax(dim=1) == targets[:, i]
-            masks.append(is_head_correct)
-            
-        scaled_loss = total_loss / num_outputs
-
-        correct = masks[0]
-        for mask in masks[1:]:
-            correct = correct & mask
-            
-        sequence_acc = correct.float().mean().item()
-
-        return scaled_loss, sequence_acc
+        return MultiHeadLoss(logits_list, targets)
 
 class NAT(BaseNAT):
     def computeLoss(self, logits, targets):
@@ -347,18 +345,7 @@ class NAT(BaseNAT):
 
 class MHDOT(BaseMHDOT):
     def computeLoss(self, logits_list, targets):
-        total_loss = 0.0
-        total_acc = 0.0
-        
-        for i, logits in enumerate(logits_list):
-            loss = F.cross_entropy(logits, targets[:, i])
-            
-            acc = (logits.argmax(dim=1) == targets[:, i]).float().mean().item()
-            
-            total_loss += loss
-            total_acc += acc
-
-        return total_loss, total_acc / len(logits_list)
+        return MultiHeadLoss(logits_list, targets)
 
 
 
@@ -398,4 +385,3 @@ def GetModel(config):
         )
 
     raise ValueError(f"Unknown architecture: {arch}")
-

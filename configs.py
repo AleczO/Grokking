@@ -145,7 +145,7 @@ def DOT_CNFMA(N):
         },
         "setup": {
             "d_model": 128,
-            "n_layers": 1,
+            "n_layers": 2,
             "d_k": 128,
             "d_v": 128,
             "voc_size": 4 * N * N + 1,
@@ -174,7 +174,7 @@ def DOT_M(p):
         },
         "setup": {
             "d_model": 128,
-            "n_layers": 1,
+            "n_layers": 2,
             "d_k": 128,
             "d_v": 128,
             "voc_size": p,  # tokens and targets are 0..p-1
@@ -184,10 +184,36 @@ def DOT_M(p):
     }
 
 
+def MHDOT_CN(N):
+    """Complex multiplication (a+bi)(c+di), random split, multi-head attention.
+
+    Same task as DOT_CN: input [a, b, c, d], output [re, im] with two
+    output heads. Uses MHDOT with 4 attention heads per block
+    (d_model must be divisible by n_heads).
+    """
+    return {
+        "experiment": {
+            "arch": "MHDOT",
+            "dataset": "CN",
+            "save_path": "./runs/MHDOT_CN",
+            "N": N
+        },
+        "setup": {
+            "d_model": 128,
+            "n_heads": 4,
+            "n_layers": 2,
+            "voc_size": 4 * N * N + 1,
+            "pos_encoding": 4,
+            "num_outputs": 2,
+        }
+    }
+
+
 EXPERIMENTS = {
     "DOT_M": DOT_M,
     "DOT_CNFM": DOT_CNFM,
     "DOT_CN": DOT_CN,
+    "MHDOT_CN": MHDOT_CN,
     "DOT_CNA": DOT_CNA,
     "DOT_CNC": DOT_CNC,
     "DOT_CNFMA": DOT_CNFMA,
