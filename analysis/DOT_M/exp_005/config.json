@@ -1,0 +1,24 @@
+{
+    "experiment": {
+        "arch": "DOT",
+        "dataset": "M",
+        "save_path": "./runs/DOT_M/exp_005",
+        "N": 83
+    },
+    "setup": {
+        "d_model": 128,
+        "n_layers": 1,
+        "d_k": 128,
+        "d_v": 128,
+        "voc_size": 83,
+        "pos_encoding": 2,
+        "num_outputs": 1
+    },
+    "training": {
+        "lr": 0.001,
+        "weight_decay": 1.0,
+        "epochs": 20000,
+        "train_frac": 0.3,
+        "seed": 42
+    }
+}

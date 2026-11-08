@@ -12,6 +12,31 @@ carried out with my supervisor. The research later moved in a different
 direction, so this repository is a self-contained snapshot of the
 training framework and experiments, not an ongoing project.
 
+## Example result: modular addition
+
+![Train and validation accuracy for DOT on (a + b) mod 83](analysis/DOT_M/exp_005/acc_plot.png)
+
+Single-layer `DOT` (single-head attention, `d_model = 128`) trained on
+`(a + b) mod 83`, with 30% of the 6,889 pairs used for training and the rest
+for validation. AdamW, `lr = 1e-3`, `weight_decay = 1.0`, full-batch, seed 42.
+The full config is in `analysis/DOT_M/exp_005/config.json`; the first ~9,000
+epochs are shown. To rerun:
+
+```
+python train.py --experiment DOT_M --N 83 --weight-decay 1.0 --train-frac 0.3
+```
+
+- Training accuracy rises quickly to 40–60% and oscillates in that range until
+  epoch ~1,100, then climbs to ~100% by epoch ~1,800.
+- Validation accuracy stays near 1% until epoch ~1,100, rises to ~9% and
+  plateaus there until epoch ~4,500.
+- It then increases slowly to ~23% by epoch ~6,000, followed by a steep rise
+  to ~90% by epoch ~6,700, and reaches ~100% by epoch ~7,100.
+- Throughout training there are brief drops in training accuracy. The largest
+  late ones (around epochs ~6,700, ~7,150 and ~8,650) also pull validation
+  accuracy down, to ~30% at the lowest, after which both curves recover
+  within a few dozen epochs.
+
 ## Structure
 
 ```
@@ -32,10 +57,10 @@ training framework and experiments, not an ongoing project.
 
 ## Installation
 
-Requires Python 3.10+:
+Requires Python 3.10+ (developed on 3.11):
 
 ```
-pip install torch numpy pandas matplotlib seaborn
+pip install -r requirements.txt
 ```
 
 CPU-only PyTorch is enough; the datasets are small.

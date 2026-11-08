@@ -174,7 +174,7 @@ def DOT_M(p):
         },
         "setup": {
             "d_model": 128,
-            "n_layers": 2,
+            "n_layers": 1,
             "d_k": 128,
             "d_v": 128,
             "voc_size": p,  # tokens and targets are 0..p-1

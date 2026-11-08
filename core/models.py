@@ -1,7 +1,8 @@
+import math
+
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
-import numpy as np
 
 
 
@@ -136,7 +137,7 @@ class BaseNAT(nn.Module): # Neuron-Astrocyte Transformer
 # ---------------------------------------------------------------------- Decoder-Only Single-Head Transformer Implementation ------------------------------------------------------
 
 class LayerDOT(nn.Module): # Layer of Decoder-Only Single-Head Transformer
-    def __init__(self, D, D_k, D_v, scale_factor=6) -> None:
+    def __init__(self, D, D_k, D_v, scale_factor=4) -> None:
         super().__init__()
         self.W_q = nn.Parameter(torch.normal(0, 0.02, size=(D, D_k)))
         self.W_k = nn.Parameter(torch.normal(0, 0.02, size=(D, D_k)))
@@ -159,7 +160,7 @@ class LayerDOT(nn.Module): # Layer of Decoder-Only Single-Head Transformer
         K = X @ self.W_k 
         V = X @ self.W_v 
 
-        scores = Q @ K.transpose(-2, -1) / np.sqrt(self.D_k)
+        scores = Q @ K.transpose(-2, -1) / math.sqrt(self.D_k)
         weights = torch.softmax(scores, dim=-1) 
         attn = weights @ V  
 
@@ -236,7 +237,7 @@ class AttentionMHDOT(nn.Module): # Attention of Decoder-Only Multi-Head Transfor
         K = self.W_k(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
         V = self.W_v(X).view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
 
-        scores = Q @ K.transpose(-2, -1) / np.sqrt(self.d_head)
+        scores = Q @ K.transpose(-2, -1) / math.sqrt(self.d_head)
         weights = torch.softmax(scores, dim=-1)
         
         attn = (weights @ V).transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
